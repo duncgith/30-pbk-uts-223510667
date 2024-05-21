@@ -1,61 +1,41 @@
+<!-- src/App.vue -->
 <template>
   <div>
     <header class="header">
       <nav>
         <ul>
           <li @click="showSection('todos')">Todos</li>
-          <li @click="showSection('posts')">Post</li>
+          <li @click="showSection('posts')">Posts</li>
         </ul>
       </nav>
     </header>
 
-    <div v-if="currentSection === 'todos'" class="task-app">
-      <h1>wanted</h1>
-      <h2>dead or alive</h2>
-      <ul>
-        <li v-for="(activity, index) in filteredActivities" :key="index" class="task-item">
-          <div class="checkbox-left">
-            <input type="checkbox" v-model="activity.completed" @change="checkActivity(index)">
-            <span :class="{ 'completed': activity.completed }">{{ activity.name }}</span>
-          </div>
-          <button @click="cancelActivity(index)" class="delete-button">Batalkan</button>
-        </li>
-      </ul>
-      <form @submit.prevent="addActivity" class="add-task-form">
-        <input type="text" v-model="newActivity" placeholder="Tambah kegiatan baru">
-        <button type="submit">Tambah</button>
-      </form>
-      <button @click="filterCompleted" class="filter-button">{{ showCompleted ? 'Tampilkan semua' : 'Tampilkan Belum Selesai' }}</button>
-    </div>
+    <todos v-if="currentSection === 'todos'" :activities="activities"
+      @add-activity="addActivity" @cancel-activity="cancelActivity" @update-activity="updateActivity">
+    </todos>
 
-    <div v-if="currentSection === 'posts'" class="post-app">
-      <h1>Posts</h1>
-      <select v-model="selectedUser" @change="fetchPosts">
-        <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
-      </select>
-      <ul>
-        <li v-for="post in posts" :key="post.id" class="post-item">
-          <h3>{{ post.title }}</h3>
-          <p>{{ post.body }}</p>
-        </li>
-      </ul>
-    </div>
+    <posts v-if="currentSection === 'posts'" :users="users" :posts="posts" @fetch-posts="fetchPosts">
+    </posts>
   </div>
 </template>
 
 <script>
+import Todos from './components/Todos.vue';
+import Posts from './components/Posts.vue';
+
 export default {
+  components: {
+    Todos,
+    Posts,
+  },
   data() {
     return {
       activities: [
         { name: 'monkey.D.luffy', completed: false },
         { name: 'portgas.D.ace', completed: true },
       ],
-      newActivity: '',
-      showCompleted: true,
       currentSection: 'todos',
       users: [],
-      selectedUser: null,
       posts: [],
     };
   },
@@ -63,22 +43,14 @@ export default {
     this.fetchUsers();
   },
   methods: {
-    addActivity() {
-      this.activities.push({ name: this.newActivity, completed: false });
-      this.newActivity = '';
+    addActivity(newActivity) {
+      this.activities.push({ name: newActivity, completed: false });
     },
     cancelActivity(index) {
       this.activities.splice(index, 1);
     },
-    checkActivity(index) {
-      if (this.activities[index].completed) {
-        this.activities[index].name = `-${this.activities[index].name}-`;
-      } else {
-        this.activities[index].name = this.activities[index].name.replace(/-/g, '');
-      }
-    },
-    filterCompleted() {
-      this.showCompleted = !this.showCompleted;
+    updateActivity(index, completed) {
+      this.activities[index].completed = completed;
     },
     showSection(section) {
       this.currentSection = section;
@@ -87,21 +59,12 @@ export default {
       const response = await fetch('https://jsonplaceholder.typicode.com/users');
       this.users = await response.json();
     },
-    async fetchPosts() {
-      if (this.selectedUser) {
-        const response = await fetch(`https://jsonplaceholder.typicode.com/posts?userId=${this.selectedUser}`);
+    async fetchPosts(userId) {
+      if (userId) {
+        const response = await fetch(`https://jsonplaceholder.typicode.com/posts?userId=${userId}`);
         this.posts = await response.json();
       } else {
         this.posts = [];
-      }
-    },
-  },
-  computed: {
-    filteredActivities() {
-      if (this.showCompleted) {
-        return this.activities.filter(activity => !activity.completed);
-      } else {
-        return this.activities;
       }
     },
   },
@@ -111,9 +74,8 @@ export default {
 <style>
 body {
   background-image: url('./assets/7886styv0yw31.webp');
-  background-size: cover;
+  background-size:cover;
   background-repeat: no-repeat;
-  background-position: center;
 }
 
 .header {
@@ -148,7 +110,7 @@ body {
 }
 
 h1, h2 {
-  color: black; 
+  color: black;
 }
 
 .task-item span {
