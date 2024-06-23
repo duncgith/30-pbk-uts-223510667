@@ -1,59 +1,49 @@
-<!-- src/components/Todos.vue -->
 <template>
-    <div class="task-app">
-      <h1>wanted</h1>
-      <h2>dead or alive</h2>
-      <ul>
-        <todo-item v-for="(activity, index) in filteredActivities" :key="index" :activity="activity"
-          @cancel="cancelActivity(index)" @update:completed="updateActivity(index, $event)">
-        </todo-item>
-      </ul>
-      <form @submit.prevent="addActivity" class="add-task-form">
-        <input type="text" v-model="newActivity" placeholder="Tambah kegiatan baru">
-        <button type="submit">Tambah</button>
-      </form>
-      <button @click="filterCompleted" class="filter-button">{{ showCompleted ? 'Tampilkan semua' : 'Tampilkan Belum Selesai' }}</button>
-    </div>
-  </template>
-  
-  <script>
-  import TodoItem from './TodoItem.vue';
-  
-  export default {
-    components: {
-      TodoItem,
-    },
-    props: {
-      activities: Array,
-    },
-    data() {
-      return {
-        newActivity: '',
-        showCompleted: true,
-      };
-    },
-    methods: {
-      addActivity() {
+  <div class="task-app">
+    <h1>Todos</h1>
+    <ul>
+      <li v-for="(activity, index) in activities" :key="index" class="task-item">
+        <span :class="{ completed: activity.completed }">{{ activity.name }}</span>
+        <input type="checkbox" v-model="activity.completed" @change="updateActivity(index, activity.completed)">
+        <button class="delete-button" @click="cancelActivity(index)">Delete</button>
+      </li>
+    </ul>
+    <form @submit.prevent="addNewActivity" class="add-task-form">
+      <input type="text" v-model="newActivity" placeholder="Add a new activity">
+      <button type="submit">Add</button>
+    </form>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    activities: Array,
+  },
+  data() {
+    return {
+      newActivity: '',
+    };
+  },
+  methods: {
+    addNewActivity() {
+      if (this.newActivity.trim()) {
         this.$emit('add-activity', this.newActivity);
         this.newActivity = '';
-      },
-      cancelActivity(index) {
-        this.$emit('cancel-activity', index);
-      },
-      updateActivity(index, completed) {
-        this.$emit('update-activity', index, completed);
-      },
-      filterCompleted() {
-        this.showCompleted = !this.showCompleted;
-      },
+      }
     },
-    computed: {
-      filteredActivities() {
-        return this.showCompleted
-          ? this.activities.filter(activity => !activity.completed)
-          : this.activities;
-      },
+    cancelActivity(index) {
+      this.$emit('cancel-activity', index);
     },
-  };
-  </script>
-  
+    updateActivity(index, completed) {
+      this.$emit('update-activity', index, completed);
+    },
+  },
+};
+</script>
+
+<style scoped>
+.task-app {
+  /* Styles as defined in your main App.vue */
+}
+</style>

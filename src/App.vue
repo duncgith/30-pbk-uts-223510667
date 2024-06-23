@@ -1,4 +1,3 @@
-<!-- src/App.vue -->
 <template>
   <div>
     <header class="header">
@@ -6,6 +5,7 @@
         <ul>
           <li @click="showSection('todos')">Todos</li>
           <li @click="showSection('posts')">Posts</li>
+          <li @click="showSection('albums')">Albums</li>
         </ul>
       </nav>
     </header>
@@ -16,17 +16,32 @@
 
     <posts v-if="currentSection === 'posts'" :users="users" :posts="posts" @fetch-posts="fetchPosts">
     </posts>
+
+    <album-list v-if="currentSection === 'albums'" :albums="albums" @fetch-photos="fetchPhotos">
+    </album-list>
+
+    <album-photos v-if="currentSection === 'albums' && photos.length" :photos="photos">
+    </album-photos>
   </div>
 </template>
 
 <script>
 import Todos from './components/Todos.vue';
 import Posts from './components/Posts.vue';
+import AlbumList from './components/AlbumList.vue';
+import AlbumPhotos from './components/AlbumPhotos.vue';
+import { useMainStore } from './stores/useMainStore';
+import { mapActions, mapState } from 'pinia';
 
 export default {
   components: {
     Todos,
     Posts,
+    AlbumList,
+    AlbumPhotos,
+  },
+  computed: {
+    ...mapState(useMainStore, ['todos', 'posts', 'albums', 'photos']),
   },
   data() {
     return {
@@ -36,13 +51,14 @@ export default {
       ],
       currentSection: 'todos',
       users: [],
-      posts: [],
     };
   },
   created() {
     this.fetchUsers();
+    this.fetchAlbums();
   },
   methods: {
+    ...mapActions(useMainStore, ['fetchTodos', 'fetchPosts', 'fetchAlbums', 'fetchPhotos']),
     addActivity(newActivity) {
       this.activities.push({ name: newActivity, completed: false });
     },
@@ -59,14 +75,6 @@ export default {
       const response = await fetch('https://jsonplaceholder.typicode.com/users');
       this.users = await response.json();
     },
-    async fetchPosts(userId) {
-      if (userId) {
-        const response = await fetch(`https://jsonplaceholder.typicode.com/posts?userId=${userId}`);
-        this.posts = await response.json();
-      } else {
-        this.posts = [];
-      }
-    },
   },
 };
 </script>
@@ -74,7 +82,7 @@ export default {
 <style>
 body {
   background-image: url('./assets/7886styv0yw31.webp');
-  background-size:cover;
+  background-size: cover;
   background-repeat: no-repeat;
 }
 
@@ -98,7 +106,7 @@ body {
   cursor: pointer;
 }
 
-.task-app, .post-app {
+.task-app, .post-app, .album-app {
   font-family: 'Pirata One', cursive;
   margin: 200px auto;
   padding: 20px;
